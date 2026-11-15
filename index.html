@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Windoora Engineering — ERP & 1-Year Ledger</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    .brand-navy { background-color: #1B365D; }
+    .brand-navy-text { color: #1B365D; }
+    .brand-navy-border { border-color: #1B365D; }
+
+    /* App View Frame on Desktop */
+    body.app-mode {
+      background-color: #0f172a;
+    }
+    body.app-mode #app-shell {
+      max-width: 430px;
+      margin: 16px auto;
+      min-height: calc(100vh - 32px);
+      border-radius: 36px;
+      border: 8px solid #1e293b;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+      background-color: #f8fafc;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    @media (max-width: 640px) {
+      body.app-mode #app-shell {
+        max-width: 100%;
+        margin: 0;
+        min-height: 100vh;
+        border-radius: 0;
+        border: none;
+      }
+    }
+
+    /* Hide scrollbar for clean mobile feel */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Print / PDF Styles */
+    @media print {
+      body * { visibility: hidden; }
+      #print-area, #print-area * { visibility: visible; }
+      #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body class="antialiased">
+
+  <!-- Hidden Print Container for PDF Export -->
+  <div id="print-area" class="hidden"></div>
+
+  <!-- Main Application Shell -->
+  <div id="app-shell" class="min-h-screen flex flex-col">
+
+    <!-- Simulated Mobile Status Bar (Only visible in App View) -->
+    <div id="mobile-status-bar" class="hidden brand-navy text-white px-6 pt-2.5 pb-1 text-[11px] font-semibold flex justify-between items-center select-none">
+      <span>9:41</span>
+      <div class="w-20 h-4 bg-slate-950 rounded-full"></div>
+      <div class="flex items-center gap-1.5">
+        <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+        <i data-lucide="battery-full" class="w-4 h-4"></i>
+      </div>
+    </div>
+
+    <!-- Top Sticky Header -->
+    <header class="brand-navy text-white px-4 lg:px-6 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-md">
+      <div class="flex items-center gap-3">
+        <!-- Custom SVG Emblem matching Windoora Engineering Logo -->
+        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm shrink-0">
+          <svg viewBox="0 0 64 64" class="w-7 h-7" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32 8L38 15V34L32 28L26 34V15L32 8Z" fill="#1B365D"/>
+            <path d="M22 17L25 21V36L16 44V26L22 17Z" fill="#1B365D"/>
+            <path d="M42 17L48 26V44L39 36V21L42 17Z" fill="#1B365D"/>
+            <path d="M32 31L46 44H41L32 36L23 44H18L32 31Z" fill="#1B365D"/>
+            <rect x="28" y="42" width="3.5" height="3.5" fill="#1B365D"/>
+            <rect x="32.5" y="42" width="3.5" height="3.5" fill="#1B365D"/>
+            <rect x="28" y="46.5" width="3.5" height="3.5" fill="#1B365D"/>
+            <rect x="32.5" y="46.5" width="3.5" height="3.5" fill="#1B365D"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-extrabold tracking-wider text-sm sm:text-base leading-none">WINDOORA</h1>
+            <span class="text-[9px] bg-blue-400/20 border border-blue-300/30 px-1.5 py-0.5 rounded font-semibold">ERP</span>
+          </div>
+          <p class="text-[10px] tracking-[0.2em] text-blue-200 font-medium mt-0.5">ENGINEERING</p>
+        </div>
+      </div>
+
+      <!-- Website View vs App View Toggle -->
+      <div class="flex items-center gap-2">
+        <div class="bg-slate-900/50 p-1 rounded-xl border border-white/15 flex items-center text-xs font-semibold">
+          <button id="btn-web-view" onclick="setViewMode('web')" class="px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-white text-[#1B365D] shadow">
+            <i data-lucide="monitor" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Website View</span>
+          </button>
+          <button id="btn-app-view" onclick="setViewMode('app')" class="px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all text-blue-100 hover:text-white">
+            <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">App View</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Layout Container -->
+    <div id="layout-body" class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+
+      <!-- Desktop Sidebar Navigation (Hidden in App View) -->
+      <aside id="desktop-sidebar" class="hidden lg:flex lg:w-64 bg-white border-r border-slate-200 flex-col justify-between p-4 shrink-0">
+        <div class="space-y-1.5">
+          <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Financial Year 2026–27</p>
+          <button onclick="switchTab('overview')" data-tab="overview" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-[#1B365D] text-white">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i> 1-Year Ledger Overview
+          </button>
+          <button onclick="switchTab('customers')" data-tab="customers" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-all">
+            <i data-lucide="users" class="w-4 h-4"></i> Customer Profiles & Works
+          </button>
+          <button onclick="switchTab('purchases')" data-tab="purchases" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-all">
+            <i data-lucide="shopping-cart" class="w-4 h-4"></i> Purchase & Suppliers
+          </button>
+          <button onclick="switchTab('staff')" data-tab="staff" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-all">
+            <i data-lucide="hard-hat" class="w-4 h-4"></i> Staff, OT & Salary
+          </button>
+          <button onclick="switchTab('expenses')" data-tab="expenses" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-all">
+            <i data-lucide="receipt" class="w-4 h-4"></i> Daily Site Expenses
+          </button>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 space-y-2">
+          <button onclick="exportFullLedgerPDF()" class="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all">
+            <i data-lucide="file-down" class="w-4 h-4"></i> Export 1-Year PDF Report
+          </button>
+          <button onclick="resetDemoData()" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-500 hover:bg-slate-100 transition-all">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Sample Data
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Scrollable Content Area -->
+      <main id="main-content" class="flex-1 overflow-y-auto no-scrollbar p-4 lg:p-6 pb-24 lg:pb-8 space-y-6">
+        <!-- Dynamic Content Rendered via JS -->
+      </main>
+
+    </div>
+
+    <!-- Floating Quick Action Button (Visible in App View) -->
+    <button id="app-fab" onclick="openQuickAddModal()" class="hidden fixed lg:absolute bottom-20 right-5 w-13 h-13 p-3.5 rounded-full brand-navy text-white shadow-xl hover:scale-105 active:scale-95 transition-transform z-30 flex items-center justify-center">
+      <i data-lucide="plus" class="w-6 h-6"></i>
+    </button>
+
+    <!-- Bottom Tab Bar (Visible on Mobile & in App View) -->
+    <nav id="bottom-nav" class="lg:hidden bg-white border-t border-slate-200 px-2 py-1.5 flex justify-around items-center sticky bottom-0 z-30">
+      <button onclick="switchTab('overview')" data-tab="overview" class="mobile-nav-btn flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-lg text-[#1B365D] font-bold text-[10px]">
+        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+        <span>Overview</span>
+      </button>
+      <button onclick="switchTab('customers')" data-tab="customers" class="mobile-nav-btn flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-lg text-slate-400 font-medium text-[10px]">
+        <i data-lucide="users" class="w-5 h-5"></i>
+        <span>Customers</span>
+      </button>
+      <button onclick="switchTab('purchases')" data-tab="purchases" class="mobile-nav-btn flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-lg text-slate-400 font-medium text-[10px]">
+        <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+        <span>Purchases</span>
+      </button>
+      <button onclick="switchTab('staff')" data-tab="staff" class="mobile-nav-btn flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-lg text-slate-400 font-medium text-[10px]">
+        <i data-lucide="hard-hat" class="w-5 h-5"></i>
+        <span>Staff</span>
+      </button>
+      <button onclick="switchTab('expenses')" data-tab="expenses" class="mobile-nav-btn flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-lg text-slate-400 font-medium text-[10px]">
+        <i data-lucide="receipt" class="w-5 h-5"></i>
+        <span>Expenses</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Universal Modal Container -->
+  <div id="modal-backdrop" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div id="modal-box" class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 p-5">
+      <!-- Modal content injected here -->
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // STATE MANAGEMENT & SAMPLE DATA (FY 2026-27)
+    // ==========================================
+    const STORAGE_KEY = 'windoora_erp_data_v1';
+
+    const DEFAULT_DATA = {
+      financialYear: '2026-2027',
+      customers: [
+        {
+          id: 'cust-1',
+          name: 'Abdul Rasheed K.',
+          phone: '+91 98470 11223',
+          location: 'Manjeri, Malappuram',
+          works: [
+            {
+              id: 'work-101',
+              title: 'Main Villa UPVC Sliding Windows & Ventilators',
+              docType: 'Invoice',
+              docNo: 'INV-2026-014',
+              date: '2026-05-12',
+              totalAmount: 185000,
+              payments: [
+                { id: 'p1', date: '2026-05-02', amount: 80000, note: 'Initial Advance (UPI)' },
+                { id: 'p2', date: '2026-05-20', amount: 65000, note: 'Frame Delivery Installment' }
+              ]
+            },
+            {
+              id: 'work-102',
+              title: 'First Floor Balcony Toughened Glass Partition',
+              docType: 'Quotation',
+              docNo: 'QTN-2026-039',
+              date: '2026-08-18',
+              totalAmount: 62000,
+              payments: [
+                { id: 'p3', date: '2026-08-20', amount: 25000, note: 'Booking Advance' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'cust-2',
+          name: 'Greenfield Builders & Developers',
+          phone: '+91 94471 88990',
+          location: 'Perinthalmanna',
+          works: [
+            {
+              id: 'work-201',
+              title: 'Block A — 24 Casement Windows & Bathroom Doors',
+              docType: 'Invoice',
+              docNo: 'INV-2026-022',
+              date: '2026-07-04',
+              totalAmount: 420000,
+              payments: [
+                { id: 'p4', date: '2026-06-25', amount: 200000, note: 'Mobilization Advance (NEFT)' },
+                { id: 'p5', date: '2026-07-28', amount: 150000, note: 'Second Stage Payment' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'cust-3',
+          name: 'Dr. Fathima Suhara',
+          phone: '+91 99954 33210',
+          location: 'Kottakkal',
+          works: [
+            {
+              id: 'work-301',
+              title: 'Acoustic Soundproof Bedroom Windows',
+              docType: 'Invoice',
+              docNo: 'INV-2026-031',
+              date: '2026-10-10',
+              totalAmount: 95000,
+              payments: [
+                { id: 'p6', date: '2026-10-05', amount: 95000, note: 'Full Settlement' }
+              ]
+            }
+          ]
+        }
+      ],
+      purchases: [
+        {
+          id: 'pur-1',
+          supplier: 'Prominance UPVC Profiles Pvt Ltd',
+          docType: 'Invoice',
+          docNo: 'SUP-8841',
+          date: '2026-05-05',
+          items: '3-Track Sliding Profiles & Reinforcement Steel',
+          totalAmount: 142000,
+          paidAmount: 110000
+        },
+        {
+          id: 'pur-2',
+          supplier: 'Malabar Toughened Glass Works',
+          docType: 'Invoice',
+          docNo: 'MTG-419',
+          date: '2026-07-14',
+          items: '8mm & 10mm Clear Toughened Glass Panels',
+          totalAmount: 88500,
+          paidAmount: 88500
+        },
+        {
+          id: 'pur-3',
+          supplier: 'AluTech Hardware & Locks',
+          docType: 'Quotation',
+          docNo: 'ATH-Q92',
+          date: '2026-11-02',
+          items: 'Multi-point Locking Handles, Friction Stays & Rollers',
+          totalAmount: 46000,
+          paidAmount: 20000
+        }
+      ],
+      staff: [
+        {
+          id: 'stf-1',
+          name: 'Shameer P.',
+          role: 'Senior UPVC Fabricator',
+          baseSalary: 24000,
+          otRate: 180,
+          otHours: 16,
+          paidAmount: 22000
+        },
+        {
+          id: 'stf-2',
+          name: 'Midhun Raj',
+          role: 'Site Installation Lead',
+          baseSalary: 22000,
+          otRate: 160,
+          otHours: 22,
+          paidAmount: 25520
+        },
+        {
+          id: 'stf-3',
+          name: 'Najeeb K.',
+          role: 'Cutting & Welding Technician',
+          baseSalary: 19500,
+          otRate: 140,
+          otHours: 10,
+          paidAmount: 15000
+        }
+      ],
+      expenses: [
+        { id: 'exp-1', date: '2026-11-14', category: 'Staff Food', amount: 680, site: 'Manjeri Villa Site', note: 'Lunch & tea for 4 technicians' },
+        { id: 'exp-2', date: '2026-11-14', category: 'Petrol', amount: 1200, site: 'Workshop Pickup', note: 'Site inspection & measurement run' },
+        { id: 'exp-3', date: '2026-11-13', category: 'Transport', amount: 2400, site: 'Perinthalmanna Block A', note: 'Eicher mini-lorry window frame delivery' },
+        { id: 'exp-4', date: '2026-11-12', category: 'Travelling', amount: 450, site: 'Kottakkal', note: 'Bus & auto fare for glass measurement' },
+        { id: 'exp-5', date: '2026-11-10', category: 'Grocery', amount: 1350, site: 'Workshop Pantry', note: 'Tea powder, sugar, drinking water & snacks' },
+        { id: 'exp-6', date: '2026-08-21', category: 'Transport', amount: 1800, site: 'Manjeri Villa Site', note: 'Glass panel shifting vehicle' },
+        { id: 'exp-7', date: '2026-07-16', category: 'Petrol', amount: 2100, site: 'Perinthalmanna Block A', note: 'Generator & site vehicle fuel' },
+        { id: 'exp-8', date: '2026-05-18', category: 'Staff Food', amount: 1450, site: 'Manjeri Villa Site', note: 'Overtime night installation dinner' }
+      ]
+    };
+
+    let state = loadState();
+    let currentTab = 'overview';
+    let viewMode = window.innerWidth < 768 ? 'app' : 'web';
+    let selectedCustomerId = state.customers[0]?.id || null;
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_DATA));
+      } catch (e) {
+        return JSON.parse(JSON.stringify(DEFAULT_DATA));
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      renderCurrentTab();
+    }
+
+    function resetDemoData() {
+      if (confirm('Reset all Windoora Engineering records back to sample data?')) {
+        state = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        selectedCustomerId = state.customers[0]?.id || null;
+        saveState();
+      }
+    }
+
+    // ==========================================
+    // FORMATTING & CALCULATIONS
+    // ==========================================
+    const fmtINR = (num) => '₹' + Number(num || 0).toLocaleString('en-IN');
+
+    function getCustomerTotals(cust) {
+      let billed = 0;
+      let received = 0;
+      cust.works.forEach(w => {
+        billed += Number(w.totalAmount || 0);
+        w.payments.forEach(p => received += Number(p.amount || 0));
+      });
+      return { billed, received, due: billed - received };
+    }
+
+    function getAllMetrics() {
+      let totalCustomerBilled = 0;
+      let totalCustomerReceived = 0;
+      state.customers.forEach(c => {
+        const t = getCustomerTotals(c);
+        totalCustomerBilled += t.billed;
+        totalCustomerReceived += t.received;
+      });
+      const customerDue = totalCustomerBilled - totalCustomerReceived;
+
+      let totalPurchase = 0;
+      let totalPurchasePaid = 0;
+      state.purchases.forEach(p => {
+        totalPurchase += Number(p.totalAmount || 0);
+        totalPurchasePaid += Number(p.paidAmount || 0);
+      });
+      const purchaseDue = totalPurchase - totalPurchasePaid;
+
+      let totalPayrollEarned = 0;
+      let totalPayrollPaid = 0;
+      state.staff.forEach(s => {
+        const earned = Number(s.baseSalary || 0) + (Number(s.otHours || 0) * Number(s.otRate || 0));
+        totalPayrollEarned += earned;
+        totalPayrollPaid += Number(s.paidAmount || 0);
+      });
+      const staffDue = totalPayrollEarned - totalPayrollPaid;
+
+      let totalDailyExpenses = 0;
+      state.expenses.forEach(e => totalDailyExpenses += Number(e.amount || 0));
+
+      const netCashFlow = totalCustomerReceived - (totalPurchasePaid + totalPayrollPaid + totalDailyExpenses);
+
+      return {
+        totalCustomerBilled,
+        totalCustomerReceived,
+        customerDue,
+        totalPurchase,
+        totalPurchasePaid,
+        purchaseDue,
+        totalPayrollEarned,
+        totalPayrollPaid,
+        staffDue,
+        totalDailyExpenses,
+        netCashFlow
+      };
+    }
+
+    // ==========================================
+    // VIEW MODE SWITCHING (WEBSITE VS APP VIEW)
+    // ==========================================
+    function setViewMode(mode) {
+      viewMode = mode;
+      const body = document.body;
+      const statusBar = document.getElementById('mobile-status-bar');
+      const sidebar = document.getElementById('desktop-sidebar');
+      const bottomNav = document.getElementById('bottom-nav');
+      const appFab = document.getElementById('app-fab');
+      const btnWeb = document.getElementById('btn-web-view');
+      const btnApp = document.getElementById('btn-app-view');
+
+      if (mode === 'app') {
+        body.classList.add('app-mode');
+        statusBar.classList.remove('hidden');
+        sidebar.classList.add('lg:hidden');
+        sidebar.classList.remove('lg:flex');
+        bottomNav.classList.remove('lg:hidden');
+        appFab.classList.remove('hidden');
+
+        btnApp.classList.add('bg-white', 'text-[#1B365D]', 'shadow');
+        btnApp.classList.remove('text-blue-100');
+        btnWeb.classList.remove('bg-white', 'text-[#1B365D]', 'shadow');
+        btnWeb.classList.add('text-blue-100');
+      } else {
+        body.classList.remove('app-mode');
+        statusBar.classList.add('hidden');
+        sidebar.classList.remove('lg:hidden');
+        sidebar.classList.add('lg:flex');
+        bottomNav.classList.add('lg:hidden');
+        appFab.classList.add('hidden');
+
+        btnWeb.classList.add('bg-white', 'text-[#1B365D]', 'shadow');
+        btnWeb.classList.remove('text-blue-100');
+        btnApp.classList.remove('bg-white', 'text-[#1B365D]', 'shadow');
+        btnApp.classList.add('text-blue-100');
+      }
+      renderCurrentTab();
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        if (btn.dataset.tab === tab) {
+          btn.classList.add('bg-[#1B365D]', 'text-white');
+          btn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+        } else {
+          btn.classList.remove('bg-[#1B365D]', 'text-white');
+          btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+        }
+      });
+      document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+        if (btn.dataset.tab === tab) {
+          btn.classList.add('text-[#1B365D]', 'font-bold');
+          btn.classList.remove('text-slate-400', 'font-medium');
+        } else {
+          btn.classList.remove('text-[#1B365D]', 'font-bold');
+          btn.classList.add('text-slate-400', 'font-medium');
+        }
+      });
+      renderCurrentTab();
+    }
+
+    // ==========================================
+    // RENDER FUNCTIONS
+    // ==========================================
+    function renderCurrentTab() {
+      const container = document.getElementById('main-content');
+      if (currentTab === 'overview') container.innerHTML = renderOverview();
+      if (currentTab === 'customers') container.innerHTML = renderCustomers();
+      if (currentTab === 'purchases') container.innerHTML = renderPurchases();
+      if (currentTab === 'staff') container.innerHTML = renderStaff();
+      if (currentTab === 'expenses') container.innerHTML = renderExpenses();
+      lucide.createIcons();
+    }
+
+    // 1. OVERVIEW & 1-YEAR LEDGER
+    function renderOverview() {
+      const m = getAllMetrics();
+      const months = [
+        { key: '2026-04', label: 'Apr 2026' },
+        { key: '2026-05', label: 'May 2026' },
+        { key: '2026-06', label: 'Jun 2026' },
+        { key: '2026-07', label: 'Jul 2026' },
+        { key: '2026-08', label: 'Aug 2026' },
+        { key: '2026-09', label: 'Sep 2026' },
+        { key: '2026-10', label: 'Oct 2026' },
+        { key: '2026-11', label: 'Nov 2026' },
+        { key: '2026-12', label: 'Dec 2026' },
+        { key: '2027-01', label: 'Jan 2027' },
+        { key: '2027-02', label: 'Feb 2027' },
+        { key: '2027-03', label: 'Mar 2027' }
+      ];
+
+      const monthlyRows = months.map(mo => {
+        let custIn = 0;
+        state.customers.forEach(c => c.works.forEach(w => w.payments.forEach(p => {
+          if (p.date.startsWith(mo.key)) custIn += Number(p.amount);
+        })));
+        let purOut = 0;
+        state.purchases.forEach(p => {
+          if (p.date.startsWith(mo.key)) purOut += Number(p.paidAmount);
+        });
+        let expOut = 0;
+        state.expenses.forEach(e => {
+          if (e.date.startsWith(mo.key)) expOut += Number(e.amount);
+        });
+        const net = custIn - (purOut + expOut);
+        return { ...mo, custIn, purOut, expOut, net };
+      });
+
+      const gridCols = viewMode === 'app' ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-4';
+
+      return `
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900">1-Year Financial Ledger</h2>
+            <p class="text-xs text-slate-500">FY ${state.financialYear} • Windoora Engineering Accounts</p>
+          </div>
+          <button onclick="exportFullLedgerPDF()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all">
+            <i data-lucide="file-down" class="w-4 h-4"></i> PDF Report
+          </button>
+        </div>
+
+        <!-- KPI Summary Cards -->
+        <div class="grid ${gridCols} gap-3">
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
+              <span>Customer Received</span>
+              <i data-lucide="arrow-down-left" class="w-4 h-4 text-emerald-600"></i>
+            </div>
+            <p class="text-lg sm:text-xl font-extrabold text-emerald-600">${fmtINR(m.totalCustomerReceived)}</p>
+            <p class="text-[11px] text-slate-400 mt-1">Billed: ${fmtINR(m.totalCustomerBilled)}</p>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
+              <span>Customer Balance Due</span>
+              <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
+            </div>
+            <p class="text-lg sm:text-xl font-extrabold text-amber-600">${fmtINR(m.customerDue)}</p>
+            <p class="text-[11px] text-slate-400 mt-1">To collect from clients</p>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
+              <span>Purchase & Staff Due</span>
+              <i data-lucide="alert-circle" class="w-4 h-4 text-rose-500"></i>
+            </div>
+            <p class="text-lg sm:text-xl font-extrabold text-rose-600">${fmtINR(m.purchaseDue + m.staffDue)}</p>
+            <p class="text-[11px] text-slate-400 mt-1">Sup: ${fmtINR(m.purchaseDue)} | Staff: ${fmtINR(m.staffDue)}</p>
+          </div>
+
+          <div class="brand-navy text-white p-4 rounded-2xl shadow-sm">
+            <div class="flex items-center justify-between text-blue-200 text-xs font-semibold mb-1">
+              <span>Net Cash in Hand</span>
+              <i data-lucide="wallet" class="w-4 h-4 text-blue-200"></i>
+            </div>
+            <p class="text-lg sm:text-xl font-extrabold">${fmtINR(m.netCashFlow)}</p>
+            <p class="text-[11px] text-blue-200 mt-1">Daily Exp: ${fmtINR(m.totalDailyExpenses)}</p>
+          </div>
+        </div>
+
+        <!-- 12-Month Breakdown Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="px-4 py-3.5 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="font-bold text-sm text-slate-800">Month-by-Month Ledger (Apr 2026 – Mar 2027)</h3>
+            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#1B365D]">12 Months</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                  <th class="py-2.5 px-3.5 font-bold">Month</th>
+                  <th class="py-2.5 px-3.5 font-bold text-right">Received (+)</th>
+                  <th class="py-2.5 px-3.5 font-bold text-right">Purchases (-)</th>
+                  <th class="py-2.5 px-3.5 font-bold text-right">Daily Exp (-)</th>
+                  <th class="py-2.5 px-3.5 font-bold text-right">Net Flow</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${monthlyRows.map(r => `
+                  <tr class="hover:bg-slate-50/80">
+                    <td class="py-2.5 px-3.5 font-semibold text-slate-800">${r.label}</td>
+                    <td class="py-2.5 px-3.5 text-right font-semibold text-emerald-600">${r.custIn ? fmtINR(r.custIn) : '—'}</td>
+                    <td class="py-2.5 px-3.5 text-right text-slate-600">${r.purOut ? fmtINR(r.purOut) : '—'}</td>
+                    <td class="py-2.5 px-3.5 text-right text-slate-600">${r.expOut ? fmtINR(r.expOut) : '—'}</td>
+                    <td class="py-2.5 px-3.5 text-right font-bold ${r.net >= 0 ? 'text-[#1B365D]' : 'text-rose-600'}">${fmtINR(r.net)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // 2. CUSTOMER PROFILES (MULTI-WORK, QUOTATION/INVOICE, ADVANCES & PDF)
+    function renderCustomers() {
+      if (!selectedCustomerId && state.customers.length > 0) {
+        selectedCustomerId = state.customers[0].id;
+      }
+      const activeCust = state.customers.find(c => c.id === selectedCustomerId);
+      const layoutGrid = viewMode === 'app' ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-12';
+
+      return `
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900">Customer Profiles & Works</h2>
+            <p class="text-xs text-slate-500">Track multiple works, advances, balances & PDF statements per client</p>
+          </div>
+          <button onclick="openAddCustomerModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl brand-navy text-white text-xs font-bold shadow-sm hover:opacity-95">
+            <i data-lucide="user-plus" class="w-4 h-4"></i> New Customer
+          </button>
+        </div>
+
+        <div class="grid ${layoutGrid} gap-4">
+          <!-- Customer Directory List -->
+          <div class="${viewMode === 'app' ? '' : 'lg:col-span-4'} space-y-2.5">
+            ${state.customers.map(c => {
+              const t = getCustomerTotals(c);
+              const isSelected = c.id === selectedCustomerId;
+              return `
+                <div onclick="selectCustomer('${c.id}')" class="cursor-pointer p-3.5 rounded-2xl border transition-all ${isSelected ? 'bg-[#1B365D] text-white border-[#1B365D] shadow-md' : 'bg-white text-slate-800 border-slate-200 hover:border-blue-300'}">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h4 class="font-bold text-sm">${c.name}</h4>
+                      <p class="text-[11px] ${isSelected ? 'text-blue-200' : 'text-slate-400'}">${c.location} • ${c.works.length} Work(s)</p>
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${t.due > 0 ? (isSelected ? 'bg-amber-400 text-slate-900' : 'bg-amber-100 text-amber-800') : 'bg-emerald-500 text-white'}">
+                      ${t.due > 0 ? 'Due: ' + fmtINR(t.due) : 'Settled'}
+                    </span>
+                  </div>
+                  <div class="mt-2.5 pt-2 border-t ${isSelected ? 'border-white/15' : 'border-slate-100'} flex justify-between text-[11px]">
+                    <span>Total: <strong>${fmtINR(t.billed)}</strong></span>
+                    <span>Given: <strong>${fmtINR(t.received)}</strong></span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Selected Customer Detailed Ledger -->
+          <div class="${viewMode === 'app' ? '' : 'lg:col-span-8'}">
+            ${activeCust ? renderActiveCustomerDetail(activeCust) : '<div class="bg-white p-8 rounded-2xl text-center text-slate-400 text-sm">Select or add a customer profile.</div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderActiveCustomerDetail(cust) {
+      const t = getCustomerTotals(cust);
+      return `
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-5 space-y-4">
+          <!-- Profile Header -->
+          <div class="flex flex-wrap items-start justify-between gap-3 pb-3.5 border-b border-slate-100">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-base sm:text-lg font-extrabold text-slate-900">${cust.name}</h3>
+                <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-semibold">${cust.phone}</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">${cust.location}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="exportCustomerPDF('${cust.id}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">
+                <i data-lucide="printer" class="w-3.5 h-3.5"></i> Customer PDF
+              </button>
+              <button onclick="openAddWorkModal('${cust.id}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl brand-navy text-white text-xs font-bold">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Work
+              </button>
+            </div>
+          </div>
+
+          <!-- Overall Customer Financial Strip -->
+          <div class="grid grid-cols-3 gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200/70">
+            <div>
+              <p class="text-[10px] font-bold uppercase text-slate-400">Total Works Value</p>
+              <p class="text-sm sm:text-base font-extrabold text-slate-900">${fmtINR(t.billed)}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase text-slate-400">Total Given (Adv)</p>
+              <p class="text-sm sm:text-base font-extrabold text-emerald-600">${fmtINR(t.received)}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase text-slate-400">Balance Due</p>
+              <p class="text-sm sm:text-base font-extrabold ${t.due > 0 ? 'text-rose-600' : 'text-emerald-600'}">${fmtINR(t.due)}</p>
+            </div>
+          </div>
+
+          <!-- Individual Works List -->
+          <div class="space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Works & Projects (${cust.works.length})</h4>
+            ${cust.works.map(w => {
+              const paid = w.payments.reduce((acc, p) => acc + Number(p.amount), 0);
+              const bal = Number(w.totalAmount) - paid;
+              return `
+                <div class="border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+                  <div class="flex flex-wrap justify-between items-start gap-2">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded ${w.docType === 'Invoice' ? 'bg-blue-100 text-[#1B365D]' : 'bg-purple-100 text-purple-800'}">${w.docType} • ${w.docNo}</span>
+                        <span class="text-[11px] text-slate-400">${w.date}</span>
+                      </div>
+                      <h5 class="font-bold text-sm text-slate-900 mt-1">${w.title}</h5>
+                    </div>
+                    <button onclick="openAddPaymentModal('${cust.id}', '${w.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold flex items-center gap-1">
+                      <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Add Advance / Pay
+                    </button>
+                  </div>
+
+                  <div class="flex flex-wrap gap-4 text-xs bg-slate-50 px-3 py-2 rounded-lg">
+                    <span>Amount: <strong>${fmtINR(w.totalAmount)}</strong></span>
+                    <span class="text-emerald-700">Paid: <strong>${fmtINR(paid)}</strong></span>
+                    <span class="${bal > 0 ? 'text-rose-600' : 'text-emerald-600'}">Balance: <strong>${fmtINR(bal)}</strong></span>
+                  </div>
+
+                  <!-- Payment History Pills -->
+                  <div class="space-y-1">
+                    ${w.payments.map(p => `
+                      <div class="flex justify-between items-center text-[11px] text-slate-600 bg-white px-2.5 py-1 rounded border border-slate-100">
+                        <span><strong>${p.date}</strong> — ${p.note}</span>
+                        <span class="font-bold text-emerald-600">+ ${fmtINR(p.amount)}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function selectCustomer(id) {
+      selectedCustomerId = id;
+      renderCurrentTab();
+    }
+
+    // 3. PURCHASE & SUPPLIER LEDGER
+    function renderPurchases() {
+      const m = getAllMetrics();
+      return `
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900">Purchase & Supplier Ledger</h2>
+            <p class="text-xs text-slate-500">UPVC profiles, toughened glass, hardware invoices & pending supplier dues</p>
+          </div>
+          <button onclick="openAddPurchaseModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl brand-navy text-white text-xs font-bold shadow-sm">
+            <i data-lucide="plus" class="w-4 h-4"></i> Add Purchase
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200">
+            <p class="text-[11px] font-semibold text-slate-400">Total Purchases</p>
+            <p class="text-base sm:text-lg font-extrabold text-slate-900">${fmtINR(m.totalPurchase)}</p>
+          </div>
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200">
+            <p class="text-[11px] font-semibold text-slate-400">Total Paid</p>
+            <p class="text-base sm:text-lg font-extrabold text-emerald-600">${fmtINR(m.totalPurchasePaid)}</p>
+          </div>
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200">
+            <p class="text-[11px] font-semibold text-slate-400">Supplier Due</p>
+            <p class="text-base sm:text-lg font-extrabold text-rose-600">${fmtINR(m.purchaseDue)}</p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          ${state.purchases.map(p => {
+            const due = Number(p.totalAmount) - Number(p.paidAmount);
+            return `
+              <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap justify-between items-center gap-3">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${p.docType === 'Invoice' ? 'bg-blue-100 text-[#1B365D]' : 'bg-amber-100 text-amber-800'}">${p.docType} #${p.docNo}</span>
+                    <span class="text-[11px] text-slate-400">${p.date}</span>
+                  </div>
+                  <h4 class="font-bold text-sm text-slate-900">${p.supplier}</h4>
+                  <p class="text-xs text-slate-500">${p.items}</p>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="text-right text-xs space-y-0.5">
+                    <p>Bill: <strong>${fmtINR(p.totalAmount)}</strong></p>
+                    <p class="text-emerald-600">Paid: <strong>${fmtINR(p.paidAmount)}</strong></p>
+                    <p class="${due > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'}">Due: ${fmtINR(due)}</p>
+                  </div>
+                  ${due > 0 ? `
+                    <button onclick="paySupplierBalance('${p.id}')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">
+                      Pay Due
+                    </button>
+                  ` : `<span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold">Cleared</span>`}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // 4. STAFF, OVERTIME & SALARY
+    function renderStaff() {
+      const m = getAllMetrics();
+      return `
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900">Staff, Overtime & Salary</h2>
+            <p class="text-xs text-slate-500">Track base wages, extra OT hours, salary advances & pending balances</p>
+          </div>
+          <button onclick="openAddStaffModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl brand-navy text-white text-xs font-bold shadow-sm">
+            <i data-lucide="user-plus" class="w-4 h-4"></i> Add Staff
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200">
+            <p class="text-[11px] font-semibold text-slate-400">Total Payable</p>
+            <p class="text-base sm:text-lg font-extrabold text-slate-900">${fmtINR(m.totalPayrollEarned)}</p>
+          </div>
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200">
+            <p class="text-[11px] font-semibold text-slate-400">Salary Paid</p>
+            <p class="text-base sm:text-lg font-extrabold text-emerald-600">${fmtINR(m.totalPayrollPaid)}</p>
+          </div>
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200">
+            <p class="text-[11px] font-semibold text-slate-400">Pending Salary</p>
+            <p class="text-base sm:text-lg font-extrabold text-rose-600">${fmtINR(m.staffDue)}</p>
+          </div>
+        </div>
+
+        <div class="grid ${viewMode === 'app' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-3.5">
+          ${state.staff.map(s => {
+            const otPay = Number(s.otHours) * Number(s.otRate);
+            const totalEarned = Number(s.baseSalary) + otPay;
+            const pending = totalEarned - Number(s.paidAmount);
+            return `
+              <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h4 class="font-bold text-sm text-slate-900">${s.name}</h4>
+                    <p class="text-xs text-slate-500">${s.role}</p>
+                  </div>
+                  <span class="text-xs font-bold px-2.5 py-1 rounded-full ${pending > 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
+                    ${pending > 0 ? 'Pending: ' + fmtINR(pending) : 'Paid Full'}
+                  </span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl text-xs">
+                  <div>
+                    <p class="text-[10px] text-slate-400">Base Salary</p>
+                    <p class="font-bold">${fmtINR(s.baseSalary)}</p>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-slate-400">OT (${s.otHours}h × ₹${s.otRate})</p>
+                    <p class="font-bold text-[#1B365D]">+${fmtINR(otPay)}</p>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-slate-400">Paid So Far</p>
+                    <p class="font-bold text-emerald-600">${fmtINR(s.paidAmount)}</p>
+                  </div>
+                </div>
+
+                <div class="flex gap-2">
+                  <button onclick="addStaffOT('${s.id}')" class="flex-1 py-1.5 px-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700">
+                    + Log OT Hours
+                  </button>
+                  <button onclick="payStaffSalary('${s.id}')" class="flex-1 py-1.5 px-2.5 rounded-xl brand-navy text-white text-xs font-bold">
+                    + Pay Salary
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // 5. DAILY EXPENSES (STAFF FOOD, PETROL, TRAVELLING, TRANSPORT, GROCERY, ETC.)
+    function renderExpenses() {
+      const categories = ['Staff Food', 'Petrol', 'Travelling', 'Transport', 'Grocery', 'Site Misc'];
+      const catTotals = {};
+      categories.forEach(c => catTotals[c] = 0);
+      state.expenses.forEach(e => {
+        catTotals[e.category] = (catTotals[e.category] || 0) + Number(e.amount);
+      });
+
+      return `
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900">Daily Operational Expenses</h2>
+            <p class="text-xs text-slate-500">Staff food, petrol, travelling, transport, grocery & site consumables</p>
+          </div>
+          <button onclick="openAddExpenseModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl brand-navy text-white text-xs font-bold shadow-sm">
+            <i data-lucide="plus" class="w-4 h-4"></i> Add Expense
+          </button>
+        </div>
+
+        <!-- Category Summary Chips -->
+        <div class="grid ${viewMode === 'app' ? 'grid-cols-2' : 'grid-cols-3 lg:grid-cols-6'} gap-2.5">
+          ${categories.map(cat => `
+            <div class="bg-white p-3 rounded-xl border border-slate-200">
+              <p class="text-[11px] font-semibold text-slate-400">${cat}</p>
+              <p class="text-sm font-extrabold text-slate-900 mt-0.5">${fmtINR(catTotals[cat])}</p>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Expense Feed -->
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100 font-bold text-xs text-slate-700">Recent Daily Expense Entries</div>
+          <div class="divide-y divide-slate-100">
+            ${state.expenses.slice().reverse().map(e => `
+              <div class="p-3.5 flex items-center justify-between gap-3 hover:bg-slate-50">
+                <div class="flex items-start gap-3">
+                  <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-[#1B365D] font-bold text-[11px] shrink-0">${e.category}</span>
+                  <div>
+                    <p class="text-xs font-bold text-slate-800">${e.note}</p>
+                    <p class="text-[11px] text-slate-400">${e.date} • ${e.site}</p>
+                  </div>
+                </div>
+                <span class="font-extrabold text-sm text-rose-600 shrink-0">- ${fmtINR(e.amount)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // MODALS & DATA ENTRY ACTIONS
+    // ==========================================
+    function openModal(html) {
+      document.getElementById('modal-box').innerHTML = html;
+      document.getElementById('modal-backdrop').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      document.getElementById('modal-backdrop').classList.add('hidden');
+    }
+
+    function openQuickAddModal() {
+      openModal(`
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="font-extrabold text-base text-slate-900">Quick Entry — Windoora ERP</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button onclick="openAddExpenseModal()" class="p-3.5 rounded-xl border border-slate-200 hover:border-[#1B365D] text-left space-y-1">
+              <i data-lucide="receipt" class="w-5 h-5 text-[#1B365D]"></i>
+              <p class="font-bold text-xs">Daily Expense</p>
+              <p class="text-[10px] text-slate-400">Food, Petrol, Transport</p>
+            </button>
+            <button onclick="openAddCustomerModal()" class="p-3.5 rounded-xl border border-slate-200 hover:border-[#1B365D] text-left space-y-1">
+              <i data-lucide="user-plus" class="w-5 h-5 text-emerald-600"></i>
+              <p class="font-bold text-xs">New Customer</p>
+              <p class="text-[10px] text-slate-400">Client & Work Profile</p>
+            </button>
+            <button onclick="openAddPurchaseModal()" class="p-3.5 rounded-xl border border-slate-200 hover:border-[#1B365D] text-left space-y-1">
+              <i data-lucide="shopping-cart" class="w-5 h-5 text-amber-600"></i>
+              <p class="font-bold text-xs">Purchase Bill</p>
+              <p class="text-[10px] text-slate-400">UPVC, Glass, Hardware</p>
+            </button>
+            <button onclick="openAddStaffModal()" class="p-3.5 rounded-xl border border-slate-200 hover:border-[#1B365D] text-left space-y-1">
+              <i data-lucide="hard-hat" class="w-5 h-5 text-purple-600"></i>
+              <p class="font-bold text-xs">Add Staff</p>
+              <p class="text-[10px] text-slate-400">Salary & OT Setup</p>
+            </button>
+          </div>
+        </div>
+      `);
+    }
+
+    function openAddCustomerModal() {
+      openModal(`
+        <form onsubmit="submitCustomer(event)" class="space-y-3.5">
+          <div class="flex justify-between items-center">
+            <h3 class="font-extrabold text-base">New Customer Profile</h3>
+            <button type="button" onclick="closeModal()"><i data-lucide="x" class="w-5 h-5 text-slate-400"></i></button>
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">Customer / Builder Name</label>
+            <input required name="name" placeholder="e.g. Noufal Ahmed" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-xs font-bold mb-1">Phone Number</label>
+              <input required name="phone" placeholder="+91 98470..." class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">Site Location</label>
+              <input required name="location" placeholder="e.g. Malappuram" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+            </div>
+          </div>
+          <hr class="border-slate-100" />
+          <p class="text-xs font-bold text-[#1B365D]">First Work / Project Details</p>
+          <div>
+            <label class="block text-xs font-bold mb-1">Work Description</label>
+            <input required name="workTitle" placeholder="e.g. Ground Floor UPVC Windows" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-xs font-bold mb-1">Type</label>
+              <select name="docType" class="w-full border border-slate-300 rounded-xl px-2 py-2 text-xs">
+                <option value="Invoice">Invoice</option>
+                <option value="Quotation">Quotation</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">Total Value (₹)</label>
+              <input required type="number" name="totalAmount" placeholder="120000" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">Advance Paid (₹)</label>
+              <input required type="number" name="advance" value="0" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs" />
+            </div>
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl brand-navy text-white font-bold text-xs">Save Customer Profile</button>
+        </form>
+      `);
+    }
+
+    function submitCustomer(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const today = new Date().toISOString().slice(0, 10);
+      const adv = Number(fd.get('advance') || 0);
+      const newCust = {
+        id: 'cust-' + Date.now(),
+        name: fd.get('name'),
+        phone: fd.get('phone'),
+        location: fd.get('location'),
+        works: [{
+          id: 'work-' + Date.now(),
+          title: fd.get('workTitle'),
+          docType: fd.get('docType'),
+          docNo: (fd.get('docType') === 'Invoice' ? 'INV-' : 'QTN-') + Math.floor(100 + Math.random() * 900),
+          date: today,
+          totalAmount: Number(fd.get('totalAmount')),
+          payments: adv > 0 ? [{ id: 'p-' + Date.now(), date: today, amount: adv, note: 'Initial Advance' }] : []
+        }]
+      };
+      state.customers.unshift(newCust);
+      selectedCustomerId = newCust.id;
+      closeModal();
+      switchTab('customers');
+      saveState();
+    }
+
+    function openAddWorkModal(custId) {
+      openModal(`
+        <form onsubmit="submitWork(event, '${custId}')" class="space-y-3.5">
+          <div class="flex justify-between items-center">
+            <h3 class="font-extrabold text-base">Add New Work to Customer</h3>
+            <button type="button" onclick="closeModal()"><i data-lucide="x" class="w-5 h-5 text-slate-400"></i></button>
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">Work / Site Description</label>
+            <input required name="title" placeholder="e.g. Kitchen Door & Partition" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-xs font-bold mb-1">Document Type</label>
+              <select name="docType" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                <option value="Invoice">Invoice</option>
+                <option value="Quotation">Quotation</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">Date</label>
+              <input required type="date" name="date" value="${new Date().toISOString().slice(0, 10)}" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-xs font-bold mb-1">Total Amount (₹)</label>
+              <input required type="number" name="totalAmount" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">Advance Received (₹)</label>
+              <input required type="number" name="advance" value="0" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+            </div>
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl brand-navy text-white font-bold text-xs">Add Work</button>
+        </form>
+      `);
+    }
+
+    function submitWork(e, custId) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const cust = state.customers.find(c => c.id === custId);
+      const adv = Number(fd.get('advance') || 0);
+      cust.works.push({
+        id: 'work-' + Date.now(),
+        title: fd.get('title'),
+        docType: fd.get('docType'),
+        docNo: (fd.get('docType') === 'Invoice' ? 'INV-' : 'QTN-') + Math.floor(100 + Math.random() * 900),
+        date: fd.get('date'),
+        totalAmount: Number(fd.get('totalAmount')),
+        payments: adv > 0 ? [{ id: 'p-' + Date.now(), date: fd.get('date'), amount: adv, note: 'Advance Payment' }] : []
+      });
+      closeModal();
+      saveState();
+    }
+
+    function openAddPaymentModal(custId, workId) {
+      openModal(`
+        <form onsubmit="submitPayment(event, '${custId}', '${workId}')" class="space-y-3.5">
+          <div class="flex justify-between items-center">
+            <h3 class="font-extrabold text-base">Record Customer Advance / Payment</h3>
+            <button type="button" onclick="closeModal()"><i data-lucide="x" class="w-5 h-5 text-slate-400"></i></button>
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">Amount Received (₹)</label>
+            <input required type="number" name="amount" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">Date</label>
+            <input required type="date" name="date" value="${new Date().toISOString().slice(0, 10)}" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">Payment Mode / Note</label>
+            <input required name="note" placeholder="e.g. GPay / Cash / Stage 2" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs">Save Payment</button>
+        </form>
+      `);
+    }
+
+    function submitPayment(e, custId, workId) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const cust = state.customers.find(c => c.id === custId);
+      const work = cust.works.find(w => w.id === workId);
+      work.payments.push({
+        id: 'p-' + Date.now(),
+        date: fd.get('date'),
+        amount: Number(fd.get('amount')),
+        note: fd.get('note')
+      });
+      closeModal();
+      saveState();
+    }
+
+    function openAddPurchaseModal() {
+      openModal(`
+        <form onsubmit="submitPurchase(event)" class="space-y-3.5">
+          <div class="flex justify-between items-center">
+            <h3 class="font-extrabold text-base">Add Supplier Purchase</h3>
+            <button type="button" onclick="closeModal()"><i data-lucide="x" class="w-5 h-5 text-slate-400"></i></button>
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">Supplier Name</label>
+            <input required name="supplier" placeholder="e.g. Prominance Profiles" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-xs font-bold mb-1">Bill Type</label>
+              <select name="docType" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                <option value="Invoice">Invoice</option>
+                <option value="Quotation">Quotation</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">Invoice / Qtn No</label>
+              <input required name="docNo" placeholder="INV-402" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">Materials Purchased</label>
+            <input required name="items" placeholder="UPVC Frames, Glass, Silicon..." class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-xs font-bold mb-1">Date</label>
+              <input required type="date" name="date" value="${new Date().toISOString().slice(0, 10)}" class="w-full border border-slate-300 rounded-xl px-2 py-2 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">Total Bill (₹)</label>
+              <input required type="number" name="totalAmount" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">Paid Now (₹)</label>
+              <input required type="number" name="paidAmount" value="0" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs" />
+            </div>
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl brand-navy text-white font-bold text-xs">Save Purchase</button>
+        </form>
+      `);
+    }
+
+    function submitPurchase(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      state.purchases.unshift({
+        id: 'pur-' + Date.now(),
+        supplier: fd.get('supplier'),
+        docType: fd.get('docType'),
+        docNo: fd.get('docNo'),
+        date: fd.get('date'),
+        items: fd.get('items'),
+        totalAmount: Number(fd.get('totalAmount')),
+        paidAmount: Number(fd.get('paidAmount'))
+      });
+      closeModal();
+      switchTab('purchases');
+      saveState();
+    }
+
+    function paySupplierBalance(purId) {
+      const pur = state.purchases.find(p => p.id === purId);
+      const due = Number(pur.totalAmount) - Number(pur.paidAmount);
+      const amt = prompt(`Remaining balance for ${pur.supplier} is ₹${due}. Enter payment amount:`, due);
+      if (amt && !isNaN(amt)) {
+        pur.paidAmount = Number(pur.paidAmount) + Number(amt);
+        saveState();
+      }
+    }
+
+    function openAddStaffModal() {
+      openModal(`
+        <form onsubmit="submitStaff(event)" class="space-y-3.5">
+          <div class="flex justify-between items-center">
+            <h3 class="font-extrabold text-base">Add Team Member</h3>
+            <button type="button" onclick="closeModal()"><i data-lucide="x" class="w-5 h-5 text-slate-400"></i></button>
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">Staff Name</label>
+            <input required name="name" placeholder="e.g. Salman Faris" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">Role / Trade</label>
+            <input required name="role" placeholder="e.g. UPVC Welder / Installer" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-xs font-bold mb-1">Monthly Salary (₹)</label>
+              <input required type="number" name="baseSalary" value="20000" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">OT Hourly Rate (₹)</label>
+              <input required type="number" name="otRate" value="150" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+            </div>
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl brand-navy text-white font-bold text-xs">Save Staff Profile</button>
+        </form>
+      `);
+    }
+
+    function submitStaff(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      state.staff.push({
+        id: 'stf-' + Date.now(),
+        name: fd.get('name'),
+        role: fd.get('role'),
+        baseSalary: Number(fd.get('baseSalary')),
+        otRate: Number(fd.get('otRate')),
+        otHours: 0,
+        paidAmount: 0
+      });
+      closeModal();
+      switchTab('staff');
+      saveState();
+    }
+
+    function addStaffOT(staffId) {
+      const s = state.staff.find(x => x.id === staffId);
+      const hrs = prompt(`Add overtime hours for ${s.name} (Rate: ₹${s.otRate}/hr):`, '4');
+      if (hrs && !isNaN(hrs)) {
+        s.otHours = Number(s.otHours) + Number(hrs);
+        saveState();
+      }
+    }
+
+    function payStaffSalary(staffId) {
+      const s = state.staff.find(x => x.id === staffId);
+      const earned = Number(s.baseSalary) + (Number(s.otHours) * Number(s.otRate));
+      const pending = earned - Number(s.paidAmount);
+      const amt = prompt(`Pending salary for ${s.name} is ₹${pending}. Enter payout amount:`, pending > 0 ? pending : 0);
+      if (amt && !isNaN(amt)) {
+        s.paidAmount = Number(s.paidAmount) + Number(amt);
+        saveState();
+      }
+    }
+
+    function openAddExpenseModal() {
+      openModal(`
+        <form onsubmit="submitExpense(event)" class="space-y-3.5">
+          <div class="flex justify-between items-center">
+            <h3 class="font-extrabold text-base">Log Daily Expense</h3>
+            <button type="button" onclick="closeModal()"><i data-lucide="x" class="w-5 h-5 text-slate-400"></i></button>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-xs font-bold mb-1">Category</label>
+              <select name="category" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                <option value="Staff Food">Staff Food</option>
+                <option value="Petrol">Petrol</option>
+                <option value="Travelling">Travelling</option>
+                <option value="Transport">Transport</option>
+                <option value="Grocery">Grocery</option>
+                <option value="Site Misc">Site Misc</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">Amount (₹)</label>
+              <input required type="number" name="amount" placeholder="500" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-xs font-bold mb-1">Date</label>
+              <input required type="date" name="date" value="${new Date().toISOString().slice(0, 10)}" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">Site / Workshop</label>
+              <input required name="site" placeholder="e.g. Manjeri Site" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">Note / Details</label>
+            <input required name="note" placeholder="e.g. Tea & snacks for installation team" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl brand-navy text-white font-bold text-xs">Save Daily Expense</button>
+        </form>
+      `);
+    }
+
+    function submitExpense(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      state.expenses.push({
+        id: 'exp-' + Date.now(),
+        date: fd.get('date'),
+        category: fd.get('category'),
+        amount: Number(fd.get('amount')),
+        site: fd.get('site'),
+        note: fd.get('note')
+      });
+      closeModal();
+      switchTab('expenses');
+      saveState();
+    }
+
+    // ==========================================
+    // PDF REPORT GENERATION (PRINT ENGINE)
+    // ==========================================
+    function triggerPrint(htmlContent) {
+      const printArea = document.getElementById('print-area');
+      printArea.innerHTML = htmlContent;
+      printArea.classList.remove('hidden');
+      window.print();
+      setTimeout(() => printArea.classList.add('hidden'), 500);
+    }
+
+    function exportFullLedgerPDF() {
+      const m = getAllMetrics();
+      triggerPrint(`
+        <div style="font-family: Inter, sans-serif; color: #0f172a;">
+          <div style="border-bottom: 3px solid #1B365D; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h1 style="margin:0; color:#1B365D; font-size:22px;">WINDOORA ENGINEERING</h1>
+              <p style="margin:2px 0 0; font-size:12px; color:#64748b;">1-Year Consolidated Financial Ledger Report (FY ${state.financialYear})</p>
+            </div>
+            <div style="text-align:right; font-size:11px; color:#475569;">
+              Generated: ${new Date().toLocaleDateString('en-IN')}
+            </div>
+          </div>
+
+          <table style="width:100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
+            <tr style="background:#f8fafc;">
+              <th style="border:1px solid #cbd5e1; padding:8px; text-align:left;">Account Head</th>
+              <th style="border:1px solid #cbd5e1; padding:8px; text-align:right;">Total Billed / Earned</th>
+              <th style="border:1px solid #cbd5e1; padding:8px; text-align:right;">Paid / Received</th>
+              <th style="border:1px solid #cbd5e1; padding:8px; text-align:right;">Pending Balance / Due</th>
+            </tr>
+            <tr>
+              <td style="border:1px solid #cbd5e1; padding:8px;">Customer Works & Invoices</td>
+              <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">${fmtINR(m.totalCustomerBilled)}</td>
+              <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">${fmtINR(m.totalCustomerReceived)}</td>
+              <td style="border:1px solid #cbd5e1; padding:8px; text-align:right; font-weight:bold;">${fmtINR(m.customerDue)}</td>
+            </tr>
+            <tr>
+              <td style="border:1px solid #cbd5e1; padding:8px;">Supplier Purchases</td>
+              <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">${fmtINR(m.totalPurchase)}</td>
+              <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">${fmtINR(m.totalPurchasePaid)}</td>
+              <td style="border:1px solid #cbd5e1; padding:8px; text-align:right; font-weight:bold;">${fmtINR(m.purchaseDue)}</td>
+            </tr>
+            <tr>
+              <td style="border:1px solid #cbd5e1; padding:8px;">Staff Salary & Overtime</td>
+              <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">${fmtINR(m.totalPayrollEarned)}</td>
+              <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">${fmtINR(m.totalPayrollPaid)}</td>
+              <td style="border:1px solid #cbd5e1; padding:8px; text-align:right; font-weight:bold;">${fmtINR(m.staffDue)}</td>
+            </tr>
+            <tr>
+              <td style="border:1px solid #cbd5e1; padding:8px;">Daily Operational Expenses</td>
+              <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">${fmtINR(m.totalDailyExpenses)}</td>
+              <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">${fmtINR(m.totalDailyExpenses)}</td>
+              <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">₹0</td>
+            </tr>
+          </table>
+
+          <div style="background:#1B365D; color:white; padding:12px 16px; border-radius:8px; font-size:14px; font-weight:bold; display:flex; justify-content:space-between;">
+            <span>Net Cash Flow in Hand</span>
+            <span>${fmtINR(m.netCashFlow)}</span>
+          </div>
+        </div>
+      `);
+    }
+
+    function exportCustomerPDF(custId) {
+      const cust = state.customers.find(c => c.id === custId);
+      const t = getCustomerTotals(cust);
+      triggerPrint(`
+        <div style="font-family: Inter, sans-serif; color: #0f172a;">
+          <div style="border-bottom: 3px solid #1B365D; padding-bottom: 12px; margin-bottom: 18px;">
+            <h1 style="margin:0; color:#1B365D; font-size:22px;">WINDOORA ENGINEERING</h1>
+            <p style="margin:2px 0 0; font-size:12px; color:#64748b;">Customer Account & Work Statement</p>
+          </div>
+          <div style="margin-bottom: 16px; font-size: 13px;">
+            <strong>Customer:</strong> ${cust.name} (${cust.phone})<br/>
+            <strong>Location:</strong> ${cust.location}<br/>
+            <strong>Statement Date:</strong> ${new Date().toLocaleDateString('en-IN')}
+          </div>
+          ${cust.works.map(w => {
+            const paid = w.payments.reduce((a, p) => a + Number(p.amount), 0);
+            return `
+              <div style="border:1px solid #cbd5e1; padding:10px; margin-bottom:12px; border-radius:6px; font-size:12px;">
+                <strong>${w.docType} #${w.docNo} — ${w.title}</strong> (${w.date})<br/>
+                Total Value: <strong>${fmtINR(w.totalAmount)}</strong> | Received: <strong>${fmtINR(paid)}</strong> | Balance Due: <strong>${fmtINR(w.totalAmount - paid)}</strong>
+                <ul style="margin:6px 0 0; padding-left:18px;">
+                  ${w.payments.map(p => `<li>${p.date}: ${fmtINR(p.amount)} (${p.note})</li>`).join('')}
+                </ul>
+              </div>
+            `;
+          }).join('')}
+          <div style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:14px; font-weight:bold;">
+            Total Works: ${fmtINR(t.billed)} &nbsp;|&nbsp; Total Given: ${fmtINR(t.received)} &nbsp;|&nbsp; Net Balance Due: ${fmtINR(t.due)}
+          </div>
+        </div>
+      `);
+    }
+
+    // Initialize App
+    setViewMode(viewMode);
+  </script>
+</body>
+</html>
